@@ -51,5 +51,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "B.sln"
+    "dotnet.defaultSolution": "RE-FinalProject.sln"
 }
