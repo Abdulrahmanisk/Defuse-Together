@@ -13,11 +13,9 @@ namespace Fries.Interior_01.Setup {
             GameObject yureiManager = GameObject.Find("Yurei Manager");
             if (yureiManager == null) {
                 yureiManager = new GameObject("Yurei Manager");
-                yureiManager.AddComponent<YureiManagerBRP>();
             }
             
-            if (!yureiManager.GetComponent<YureiManagerBRP>()) 
-                Debug.LogError("You have an invalid Yurei Manager in the scene. Please delete it and try again.");
+           
             
             // 清除当前的选择
             Selection.activeGameObject = null;
