@@ -43,11 +43,6 @@ namespace TheBomb
 
         void Awake()
         {
-            foreach (var button in keypadButtons)
-            {
-                string key = button.GetComponentInChildren<TMP_Text>().text;
-                button.onClick.AddListener(() => OnKeyPress(key));
-            }
             enterButton.onClick.AddListener(OnEnterPress);
             clearButton.onClick.AddListener(Clear);
         }
@@ -65,7 +60,7 @@ namespace TheBomb
             StartCoroutine(CountdownTimer());
         }
 
-       public void OnKeyPress(string key)
+        public void OnKeyPress(string key)
         {
             if (isExploded) return;
 
@@ -90,43 +85,42 @@ namespace TheBomb
             if (isExploded) return;
 
             string trimmedInput = currentInput.Trim();
+            string correctCode = correctCodes[currentCodeIndex].Trim();
 
-            if (int.TryParse(trimmedInput, out int inputNumber))
+            Debug.Log($"Trimmed Input: '{trimmedInput}'");
+            Debug.Log($"Correct Code: '{correctCode}'");
+            Debug.Log($"Current Index: {currentCodeIndex}");
+
+            if (string.IsNullOrEmpty(trimmedInput))
             {
-                if (int.TryParse(correctCodes[currentCodeIndex], out int correctNumber))
-                {
-                    if (inputNumber == correctNumber)
-                    {
-                        PlaySound(correctCodeSound);
-                        currentCodeIndex++;
+                Debug.LogError("Input is empty, skipping comparison.");
+                return;
+            }
 
-                        if (currentCodeIndex >= correctCodes.Length)
-                        {
-                            GrantAccess();
-                        }
-                        else
-                        {
-                            UpdateDisplay($"Code {currentCodeIndex} Done Next Code");
-                            UpdatePanelColor(Color.green);
-                        }
-                    }
-                    else
-                    {
-                        HandleWrongCode();
-                    }
+            if (string.Equals(trimmedInput, correctCode, System.StringComparison.OrdinalIgnoreCase))
+            {
+                Debug.Log("Code is correct");
+                PlaySound(correctCodeSound);
+
+                currentInput = "";
+                currentCodeIndex++;
+
+                if (currentCodeIndex >= correctCodes.Length)
+                {
+                    GrantAccess();
                 }
                 else
                 {
-                    Debug.LogError($"Error: Correct code at index {currentCodeIndex} is not a valid number!");
+                    UpdateDisplay($"Code {currentCodeIndex} Done Next Code");
+                    UpdatePanelColor(Color.green);
                 }
             }
             else
             {
-                Debug.LogError($"Invalid Input: {trimmedInput} is not a valid number.");
+                Debug.LogError("Code is incorrect");
                 HandleWrongCode();
+                currentInput = "";
             }
-
-            currentInput = "";
         }
 
         void HandleWrongCode()
@@ -195,7 +189,11 @@ namespace TheBomb
         {
             if (timerText != null)
             {
-                timerText.text = $"Time: {Mathf.Ceil(timer)}s";
+                timerText.text = $"Time: {Mathf.Ceil(timer)} s";
+            }
+            else
+            {
+                Debug.Log("Timer not assigned");
             }
         }
 
