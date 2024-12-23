@@ -19,8 +19,22 @@ namespace TheBomb
         [SerializeField] string[] correctCodes;
         [SerializeField] GameObject targetObjectToActivate;
 
-        string currentInput = "";
-        int currentCodeIndex = 0;
+        [Header("Explosion Settings")]
+        [SerializeField] ParticleSystem explosionEffect;
+        [SerializeField] int maxWrongAttempts = 3; // عدد المحاولات الخاطئة قبل الانفجار
+        [SerializeField] float timer = 30f; // الوقت قبل الانفجار
+        [SerializeField] TMP_Text timerText; // النص لعرض الوقت المتبقي
+
+        [Header("Audio Settings")]
+        [SerializeField] AudioClip correctCodeSound;
+        [SerializeField] AudioClip wrongCodeSound;
+        [SerializeField] AudioClip explosionSound;
+        [SerializeField] AudioSource audioSource;
+
+        private string currentInput = "";
+        private int currentCodeIndex = 0;
+        private int wrongAttempts = 0; // عدد المحاولات الخاطئة
+        private bool isExploded = false; // للتأكد أن الانفجار يحدث مرة واحدة
 
         void Awake()
         {
@@ -42,11 +56,18 @@ namespace TheBomb
 
             UpdateDisplay("Enter Code");
             UpdatePanelColor(Color.yellow);
+
+            if (timerText != null)
+            {
+                UpdateTimerText();
+            }
+
+            StartCoroutine(CountdownTimer());
         }
 
         void OnKeyPress(string key)
         {
-            Debug.Log($"Key Pressed: {key}");
+            if (isExploded) return;
 
             if (int.TryParse(key, out _))
             {
@@ -64,17 +85,17 @@ namespace TheBomb
 
         public void OnEnterPress()
         {
+            if (isExploded) return;
+
             string trimmedInput = currentInput.Trim();
-            Debug.Log($"Current Input: {trimmedInput}");
 
             if (int.TryParse(trimmedInput, out int inputNumber))
             {
-                Debug.Log($"Parsed Input: {inputNumber}");
                 if (int.TryParse(correctCodes[currentCodeIndex], out int correctNumber))
                 {
-                    Debug.Log($"Correct Code: {correctNumber}");
                     if (inputNumber == correctNumber)
                     {
+                        PlaySound(correctCodeSound);
                         currentCodeIndex++;
 
                         if (currentCodeIndex >= correctCodes.Length)
@@ -89,9 +110,7 @@ namespace TheBomb
                     }
                     else
                     {
-                        UpdateDisplay("Access Denied");
-                        UpdatePanelColor(Color.red);
-                        StartCoroutine(ClearDisplayAfterDelay());
+                        HandleWrongCode();
                     }
                 }
                 else
@@ -102,12 +121,80 @@ namespace TheBomb
             else
             {
                 Debug.LogError($"Invalid Input: {trimmedInput} is not a valid number.");
-                UpdateDisplay("Invalid Input");
-                UpdatePanelColor(Color.red);
-                StartCoroutine(ClearDisplayAfterDelay());
+                HandleWrongCode();
             }
 
             currentInput = "";
+        }
+
+        void HandleWrongCode()
+        {
+            wrongAttempts++;
+            PlaySound(wrongCodeSound);
+
+            if (wrongAttempts >= maxWrongAttempts)
+            {
+                Explode();
+            }
+            else
+            {
+                UpdateDisplay("Access Denied");
+                UpdatePanelColor(Color.red);
+                StartCoroutine(ClearDisplayAfterDelay());
+            }
+        }
+
+        void Explode()
+        {
+            isExploded = true;
+            UpdateDisplay("BOOM!");
+            UpdatePanelColor(Color.red);
+
+            if (explosionEffect != null)
+            {
+                Instantiate(explosionEffect, transform.position, Quaternion.identity);
+                explosionEffect.Play();
+            }
+
+            PlaySound(explosionSound);
+
+            foreach (var button in keypadButtons)
+            {
+                button.interactable = false;
+            }
+            enterButton.interactable = false;
+            clearButton.interactable = false;
+
+            StartCoroutine(RestartSceneAfterDelay());
+        }
+
+        IEnumerator RestartSceneAfterDelay()
+        {
+            yield return new WaitForSeconds(3f);
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
+
+        IEnumerator CountdownTimer()
+        {
+            while (timer > 0 && !isExploded)
+            {
+                timer -= Time.deltaTime;
+                UpdateTimerText();
+                yield return null;
+            }
+
+            if (timer <= 0 && !isExploded)
+            {
+                Explode();
+            }
+        }
+
+        void UpdateTimerText()
+        {
+            if (timerText != null)
+            {
+                timerText.text = $"Time: {Mathf.Ceil(timer)}s";
+            }
         }
 
         void GrantAccess()
@@ -157,6 +244,14 @@ namespace TheBomb
             currentInput = "";
             UpdateDisplay("Cleared!!");
             UpdatePanelColor(Color.yellow);
+        }
+
+        void PlaySound(AudioClip clip)
+        {
+            if (audioSource != null && clip != null)
+            {
+                audioSource.PlayOneShot(clip);
+            }
         }
     }
 }
