@@ -12,14 +12,15 @@ namespace TheBomb
         [SerializeField] TMP_Text displayText;
         [SerializeField] Button[] keypadButtons;
         [SerializeField] Button enterButton;
-        [SerializeField] Button ClearButton;
+        [SerializeField] Button clearButton;
+        [SerializeField] Image panel;
 
         [Header("Settings")]
         [SerializeField] string[] correctCodes;
-        [SerializeField] GameObject targetObjectToActivate; 
+        [SerializeField] GameObject targetObjectToActivate;
 
         string currentInput = "";
-        int currentCodeIndex = 0; 
+        int currentCodeIndex = 0;
 
         void Awake()
         {
@@ -28,17 +29,19 @@ namespace TheBomb
                 string key = button.GetComponentInChildren<TMP_Text>().text;
                 button.onClick.AddListener(() => OnKeyPress(key));
             }
-            enterButton.onClick.AddListener(OnEnterPress); 
+            enterButton.onClick.AddListener(OnEnterPress);
+            clearButton.onClick.AddListener(Clear);
         }
 
         void Start()
         {
             if (targetObjectToActivate != null)
             {
-                targetObjectToActivate.SetActive(false); 
+                targetObjectToActivate.SetActive(false);
             }
 
-            UpdateDisplay("Enter Code");  
+            UpdateDisplay("Enter Code");
+            UpdatePanelColor(Color.yellow);
         }
 
         void OnKeyPress(string key)
@@ -59,7 +62,7 @@ namespace TheBomb
             }
         }
 
-     public void OnEnterPress()
+        public void OnEnterPress()
         {
             string trimmedInput = currentInput.Trim();
             Debug.Log($"Current Input: {trimmedInput}");
@@ -76,16 +79,18 @@ namespace TheBomb
 
                         if (currentCodeIndex >= correctCodes.Length)
                         {
-                            GrantAccess(); 
+                            GrantAccess();
                         }
                         else
                         {
-                            UpdateDisplay($"Code {currentCodeIndex}Done Next Code");
+                            UpdateDisplay($"Code {currentCodeIndex} Done Next Code");
+                            UpdatePanelColor(Color.green);
                         }
                     }
                     else
                     {
                         UpdateDisplay("Access Denied");
+                        UpdatePanelColor(Color.red);
                         StartCoroutine(ClearDisplayAfterDelay());
                     }
                 }
@@ -98,6 +103,7 @@ namespace TheBomb
             {
                 Debug.LogError($"Invalid Input: {trimmedInput} is not a valid number.");
                 UpdateDisplay("Invalid Input");
+                UpdatePanelColor(Color.red);
                 StartCoroutine(ClearDisplayAfterDelay());
             }
 
@@ -107,6 +113,7 @@ namespace TheBomb
         void GrantAccess()
         {
             UpdateDisplay("Access Granted");
+            UpdatePanelColor(Color.green);
 
             if (targetObjectToActivate != null)
             {
@@ -119,10 +126,19 @@ namespace TheBomb
             displayText.text = text;
         }
 
+        void UpdatePanelColor(Color color)
+        {
+            if (panel != null)
+            {
+                panel.color = color;
+            }
+        }
+
         IEnumerator ClearDisplayAfterDelay()
         {
             yield return new WaitForSeconds(1.5f);
             UpdateDisplay($"Enter Code {currentCodeIndex + 1}");
+            UpdatePanelColor(Color.yellow);
         }
 
         public void SubmitTextLocal(string text)
@@ -134,10 +150,13 @@ namespace TheBomb
                 currentInput += text;
                 UpdateDisplay(currentInput);
             }
-            
-        }public void Clear()
-            {
+        }
+
+        public void Clear()
+        {
+            currentInput = "";
             UpdateDisplay("Cleared!!");
-            }
+            UpdatePanelColor(Color.yellow);
+        }
     }
 }
