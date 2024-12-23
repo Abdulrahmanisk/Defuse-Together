@@ -23,7 +23,7 @@ namespace NavKeypad
         {
             if (bomb != null)
             {
-                bomb.SubmitTextLocal(value); 
+                bomb.OnKeyPress(value); 
                 StartCoroutine(MoveSmooth());
             }
         }

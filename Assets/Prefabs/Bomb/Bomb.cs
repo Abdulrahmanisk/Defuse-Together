@@ -21,20 +21,25 @@ namespace TheBomb
 
         [Header("Explosion Settings")]
         [SerializeField] ParticleSystem explosionEffect;
-        [SerializeField] int maxWrongAttempts = 3; // عدد المحاولات الخاطئة قبل الانفجار
-        [SerializeField] float timer = 30f; // الوقت قبل الانفجار
-        [SerializeField] TMP_Text timerText; // النص لعرض الوقت المتبقي
+        [SerializeField] int maxWrongAttempts = 3;
+        [SerializeField] float timer = 30f;
+        [SerializeField] TMP_Text timerText;
 
         [Header("Audio Settings")]
         [SerializeField] AudioClip correctCodeSound;
         [SerializeField] AudioClip wrongCodeSound;
         [SerializeField] AudioClip explosionSound;
+        [SerializeField] AudioClip buttonPressSound;
         [SerializeField] AudioSource audioSource;
+
+        [Header("Scene Settings")]
+        [SerializeField] string winSceneName = "WinScene";
+        [SerializeField] string loseSceneName = "LoseScene";
 
         private string currentInput = "";
         private int currentCodeIndex = 0;
-        private int wrongAttempts = 0; // عدد المحاولات الخاطئة
-        private bool isExploded = false; // للتأكد أن الانفجار يحدث مرة واحدة
+        private int wrongAttempts = 0;
+        private bool isExploded = false;
 
         void Awake()
         {
@@ -49,11 +54,6 @@ namespace TheBomb
 
         void Start()
         {
-            if (targetObjectToActivate != null)
-            {
-                targetObjectToActivate.SetActive(false);
-            }
-
             UpdateDisplay("Enter Code");
             UpdatePanelColor(Color.yellow);
 
@@ -65,9 +65,11 @@ namespace TheBomb
             StartCoroutine(CountdownTimer());
         }
 
-        void OnKeyPress(string key)
+       public void OnKeyPress(string key)
         {
             if (isExploded) return;
+
+            PlaySound(buttonPressSound);
 
             if (int.TryParse(key, out _))
             {
@@ -165,13 +167,13 @@ namespace TheBomb
             enterButton.interactable = false;
             clearButton.interactable = false;
 
-            StartCoroutine(RestartSceneAfterDelay());
+            StartCoroutine(LoadLoseSceneAfterDelay());
         }
 
-        IEnumerator RestartSceneAfterDelay()
+        IEnumerator LoadLoseSceneAfterDelay()
         {
             yield return new WaitForSeconds(3f);
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            SceneManager.LoadScene(loseSceneName);
         }
 
         IEnumerator CountdownTimer()
@@ -202,10 +204,7 @@ namespace TheBomb
             UpdateDisplay("Access Granted");
             UpdatePanelColor(Color.green);
 
-            if (targetObjectToActivate != null)
-            {
-                targetObjectToActivate.SetActive(true);
-            }
+            SceneManager.LoadScene(winSceneName);
         }
 
         void UpdateDisplay(string text)
@@ -226,17 +225,6 @@ namespace TheBomb
             yield return new WaitForSeconds(1.5f);
             UpdateDisplay($"Enter Code {currentCodeIndex + 1}");
             UpdatePanelColor(Color.yellow);
-        }
-
-        public void SubmitTextLocal(string text)
-        {
-            if (string.IsNullOrEmpty(text) || string.IsNullOrWhiteSpace(text)) return;
-
-            if (currentInput.Length <= 4)
-            {
-                currentInput += text;
-                UpdateDisplay(currentInput);
-            }
         }
 
         public void Clear()
