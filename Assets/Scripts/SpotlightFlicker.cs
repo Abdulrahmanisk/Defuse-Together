@@ -10,7 +10,7 @@ public class SpotlightFlicker : MonoBehaviour
     public float minInterval = 0.05f; // Minimum time between flickers.
     public float maxInterval = 0.5f; // Maximum time between flickers.
 
-    public float longOffChance = 0.2f; // Chance for a longer off period (0.0 to 1.0).
+    public float longOffChance = 0f; // Chance for a longer off period (0.0 to 1.0).
     public float longOnChance = 0.2f;  // Chance for a longer on period (0.0 to 1.0).
     public float longDuration = 1.5f;  // Duration for long on/off periods.
 
