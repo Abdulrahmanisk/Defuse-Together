@@ -8,6 +8,8 @@ namespace TheBomb
 {
     public class Bomb : MonoBehaviour
     {
+        [SerializeField] private float lastClockSoundTime = 0f;
+        [SerializeField] private float clockSoundInterval = 1f;
         [Header("UI Elements")]
         [SerializeField] TMP_Text displayText;
         [SerializeField] Button[] keypadButtons;
@@ -30,6 +32,7 @@ namespace TheBomb
         [SerializeField] AudioClip wrongCodeSound;
         [SerializeField] AudioClip explosionSound;
         [SerializeField] AudioClip buttonPressSound;
+        [SerializeField] AudioClip clockSound;
         [SerializeField] AudioSource audioSource;
 
         [Header("Scene Settings")]
@@ -166,7 +169,7 @@ namespace TheBomb
 
         IEnumerator LoadLoseSceneAfterDelay()
         {
-            yield return new WaitForSeconds(3f);
+            yield return new WaitForSeconds(1f);
             SceneManager.LoadScene(loseSceneName);
         }
 
@@ -175,6 +178,12 @@ namespace TheBomb
             while (timer > 0 && !isExploded)
             {
                 timer -= Time.deltaTime;
+                if (Time.time >= lastClockSoundTime + clockSoundInterval)
+                {
+                    PlaySound(clockSound);
+                    lastClockSoundTime = Time.time;
+                }
+
                 UpdateTimerText();
                 yield return null;
             }
